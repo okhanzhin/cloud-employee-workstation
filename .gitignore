@@ -1,0 +1,36 @@
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+.kotlin
+
+### IntelliJ IDEA ###
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/workspace.xml
+.idea/libraries/
+*.iws
+*.iml
+*.ipr
+.idea/
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### Gradle
+.gradle/
+**/.gradle/
+**/build/
+gradle-app.setting
+.gradletasknamecache
+
+### Mac OS ###
+.DS_Store
+
+### Java/Kotlin compiled artifacts
+*.class
+
+### Packaged artifacts
+*.jar
+*.war
+*.ear
