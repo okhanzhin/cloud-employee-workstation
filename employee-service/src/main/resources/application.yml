@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: employee-service
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    config:
+      import-check:
+        enabled: false
+eureka:
+  client:
+    enabled: false
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
