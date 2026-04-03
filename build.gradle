@@ -1,22 +1,40 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.5' apply false
-    id 'io.spring.dependency-management' version '1.1.5' apply false
-    id 'org.jetbrains.kotlin.jvm' version '1.9.24' apply false
-    id 'org.jetbrains.kotlin.plugin.spring' version '1.9.24' apply false
+    id 'org.springframework.boot' version "${springBootPluginVersion}" apply false
+    id 'io.spring.dependency-management' version "${springDependencyManagementPluginVersion}" apply false
+    id 'org.jetbrains.kotlin.jvm' version "${kotlinVersion}" apply false
+    id 'org.jetbrains.kotlin.plugin.spring' version "${kotlinVersion}" apply false
+    id 'com.bmuschko.docker-remote-api' version "${bmuschkoDockerPluginVersion}" apply false
 }
 
 group = 'com.okhanzhin'
-version = '1.0-SNAPSHOT'
+version = findProperty('projectVersion') ?: '1.0-SNAPSHOT'
+
+ext {
+    dockerImagePrefix = findProperty('docker.image.prefix') ?: 'okhanzhin'
+}
 
 allprojects {
     repositories {
         mavenCentral()
+        gradlePluginPortal()
     }
 }
 
 subprojects {
+    apply plugin: 'java'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'com.bmuschko.docker-remote-api'
+
+    def toolchainVersion = (findProperty('javaVersion') ?: '21').toString().toInteger()
+    def lombok = findProperty('lombokVersion') ?: '1.18.42'
+    def springCloud = findProperty('springCloudVersion') ?: '2024.0.1'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(toolchainVersion)
+        }
+    }
 
     plugins.withId('java') {
         configurations {
@@ -26,16 +44,48 @@ subprojects {
         }
 
         dependencies {
-            compileOnly 'org.projectlombok:lombok:1.18.42'
-            annotationProcessor 'org.projectlombok:lombok:1.18.42'
+            compileOnly "org.projectlombok:lombok:${lombok}"
+            annotationProcessor "org.projectlombok:lombok:${lombok}"
 
-            testCompileOnly 'org.projectlombok:lombok:1.18.42'
-            testAnnotationProcessor 'org.projectlombok:lombok:1.18.42'
+            testCompileOnly "org.projectlombok:lombok:${lombok}"
+            testAnnotationProcessor "org.projectlombok:lombok:${lombok}"
+            testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        }
+
+        dependencyManagement {
+            imports {
+                mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloud}"
+            }
         }
     }
 
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+    }
+
+    plugins.withId('org.springframework.boot') {
+        dependencies {
+            implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        }
+
+        def dockerPrefix = rootProject.findProperty('docker.image.prefix') ?: rootProject.ext.dockerImagePrefix
+        def imageName = "${dockerPrefix}/${project.name}:${project.version}"
+
+        tasks.register('buildDockerImage', com.bmuschko.gradle.docker.tasks.image.DockerBuildImage) {
+            dependsOn tasks.named('bootJar')
+            inputDir = project.projectDir
+            images.add(imageName)
+            buildArgs.put('JAR_FILE', "build/libs/${tasks.named('bootJar').get().archiveFileName.get()}")
+        }
+
+        tasks.register('pushDockerImage', com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
+            dependsOn tasks.named('buildDockerImage')
+            images.add(imageName)
+        }
+
+        tasks.register('dockerBuildAndPush') {
+            dependsOn tasks.named('pushDockerImage')
+        }
     }
 }

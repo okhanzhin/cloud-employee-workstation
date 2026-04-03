@@ -1,0 +1,36 @@
+services:
+  # Spring Cloud Config Server
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: build/libs/config-server.jar
+    image: config-server:local
+    container_name: config-server
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8071/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    ports:
+      - "8071:8071"
+
+  # Business service that reads config from config-server
+  employee-service:
+    build:
+      context: ./employee-service
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: build/libs/employee-service.jar
+    image: employee-service:local
+    container_name: employee-service
+    depends_on:
+      config-server:
+        condition: service_healthy
+    restart: on-failure
+    ports:
+      - "8081:8081"
+

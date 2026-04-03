@@ -1,0 +1,11 @@
+plugins {
+    id 'org.springframework.boot'
+}
+
+springBoot {
+    mainClass = 'com.okhanzhin.config.server.ConfigurationServerApplication'
+}
+
+dependencies {
+    implementation 'org.springframework.cloud:spring-cloud-config-server'
+}

@@ -31,7 +31,31 @@
 ## Docker Compose
 
 ```bash
-docker compose up --build
+./gradlew :config-server:bootJar :employee-service:bootJar
+docker compose up -d --build
+```
+
+Собственная конфигурация `config-server` теперь хранится только в `config-server/src/main/resources/application.yml`.
+Через Spring Cloud Config он отдает клиентским сервисам настройки из `config-server/src/main/resources/config/`, например `employee-service.properties`.
+
+Порядок старта сервисов в текущем `docker-compose.yml`:
+
+1. Сначала запускается `config-server`.
+2. `config-server` считается готовым только после успешного `healthcheck` по `http://localhost:8071/actuator/health`.
+3. После статуса `healthy` стартует `employee-service`.
+4. На старте `employee-service` забирает конфигурацию из Spring Cloud Config по адресу `configserver:http://config-server:8071`.
+
+Проверить состояние контейнеров можно так:
+
+```bash
+docker compose ps
+docker compose logs -f config-server employee-service
+```
+
+Остановить контейнеры можно так:
+
+```bash
+docker compose down
 ```
 
 ## Kubernetes
