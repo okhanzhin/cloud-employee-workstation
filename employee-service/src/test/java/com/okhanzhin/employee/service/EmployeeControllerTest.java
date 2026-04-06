@@ -3,6 +3,8 @@ package com.okhanzhin.employee.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.okhanzhin.employee.service.controller.EmployeeController;
 import com.okhanzhin.employee.service.model.Employee;
+import com.okhanzhin.employee.service.model.EmployeeDetailsResponse;
+import com.okhanzhin.employee.service.model.Workstation;
 import com.okhanzhin.employee.service.service.EmployeeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +25,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(EmployeeController.class)
+@WebMvcTest(
+        value = EmployeeController.class,
+        properties = {
+                "spring.config.import=optional:configserver:",
+                "spring.cloud.config.enabled=false",
+                "spring.cloud.config.import-check.enabled=false",
+                "eureka.client.enabled=false"
+        }
+)
 class EmployeeControllerTest {
 
     @Autowired
@@ -97,6 +107,32 @@ class EmployeeControllerTest {
                 .andExpect(jsonPath("$.name", is("Алексей")))
                 .andExpect(jsonPath("$.surname", is("Козлов")))
                 .andExpect(jsonPath("$.dateOfEmployment", is("2026-03-31")));
+    }
+
+    @Test
+    void getEmployeeDetails_existingId_shouldReturnAggregatedResponse() throws Exception {
+        Employee employee = new Employee(1L, "Иван", "Петров", LocalDate.of(2024, 1, 15));
+        EmployeeDetailsResponse response = new EmployeeDetailsResponse(
+                employee,
+                new Workstation(1L, "Lenovo ThinkPad T14", "Windows 11")
+        );
+        when(employeeService.getEmployeeDetailsById(1L)).thenReturn(response);
+
+        mockMvc.perform(get("/api/employees/1/details"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.employee.id", is(1)))
+                .andExpect(jsonPath("$.employee.name", is("Иван")))
+                .andExpect(jsonPath("$.workstation.id", is(1)))
+                .andExpect(jsonPath("$.workstation.name", is("Lenovo ThinkPad T14")))
+                .andExpect(jsonPath("$.workstation.os", is("Windows 11")));
+    }
+
+    @Test
+    void getEmployeeDetails_nonExistingId_shouldReturnStatus404() throws Exception {
+        when(employeeService.getEmployeeDetailsById(999L)).thenReturn(null);
+
+        mockMvc.perform(get("/api/employees/999/details"))
+                .andExpect(status().isNotFound());
     }
 }
 

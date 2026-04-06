@@ -3,7 +3,7 @@
 # Stage 1: unpack Spring Boot fat jar into layers
 FROM eclipse-temurin:23-jdk AS build
 
-LABEL org.opencontainers.image.title="config-server"
+LABEL org.opencontainers.image.title="service-registry"
 
 ARG JAR_FILE
 WORKDIR /workspace
@@ -26,5 +26,4 @@ COPY --from=build ${DEPENDENCY}/BOOT-INF/lib ./lib
 COPY --from=build ${DEPENDENCY}/META-INF ./META-INF
 COPY --from=build ${DEPENDENCY}/BOOT-INF/classes ./
 
-ENTRYPOINT ["java","-cp",".:./lib/*","com.okhanzhin.config.server.ConfigurationServerApplication"]
-
+ENTRYPOINT ["java","-cp",".:./lib/*","com.okhanzhin.service.registry.ServiceRegistryApplication"]

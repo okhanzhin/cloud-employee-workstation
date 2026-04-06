@@ -1,6 +1,7 @@
 package com.okhanzhin.employee.service.controller;
 
 import com.okhanzhin.employee.service.model.Employee;
+import com.okhanzhin.employee.service.model.EmployeeDetailsResponse;
 import com.okhanzhin.employee.service.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,18 @@ public class EmployeeController {
         Employee employee = employeeService.getEmployeeById(id);
         if (employee != null) {
             return ResponseEntity.ok(employee);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Получить сотрудника вместе с рабочими пространствами
+     */
+    @GetMapping("/{id}/details")
+    public ResponseEntity<EmployeeDetailsResponse> getEmployeeDetails(@PathVariable Long id) {
+        EmployeeDetailsResponse details = employeeService.getEmployeeDetailsById(id);
+        if (details != null) {
+            return ResponseEntity.ok(details);
         }
         return ResponseEntity.notFound().build();
     }

@@ -1,4 +1,6 @@
 rootProject.name = 'cloud-employee-workstation'
 
 include 'employee-service'
+include 'workstation-service'
 include 'config-server'
+include 'service-registry'

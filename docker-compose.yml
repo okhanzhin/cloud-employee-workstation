@@ -1,4 +1,5 @@
 services:
+
   # Spring Cloud Config Server
   config-server:
     build:
@@ -18,7 +19,32 @@ services:
     ports:
       - "8071:8071"
 
-  # Business service that reads config from config-server
+  # Spring Cloud Service Registry
+  service-registry:
+    build:
+      context: ./service-registry
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: build/libs/service-registry.jar
+    image: service-registry:local
+    container_name: service-registry
+    depends_on:
+      config-server:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent http://localhost:8070/actuator/health | grep -q '\"status\":\"UP\"'" ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    ports:
+      - "8070:8070"
+    environment:
+      SPRING_PROFILES_ACTIVE: "default"
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8071
+      EUREKA_INSTANCE_HOSTNAME: service-registry
+
   employee-service:
     build:
       context: ./employee-service
@@ -30,7 +56,31 @@ services:
     depends_on:
       config-server:
         condition: service_healthy
+      service-registry:
+        condition: service_healthy
     restart: on-failure
     ports:
       - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: "default"
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8071
+
+  workstation-service:
+    build:
+      context: ./workstation-service
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: build/libs/workstation-service.jar
+    image: workstation-service:local
+    depends_on:
+      config-server:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+    restart: on-failure
+    expose:
+      - "8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: "default"
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8071
 

@@ -1,0 +1,16 @@
+plugins {
+    id 'org.springframework.boot'
+}
+
+springBoot {
+    mainClass = 'com.okhanzhin.service.registry.ServiceRegistryApplication'
+}
+
+dependencies {
+    implementation('org.springframework.cloud:spring-cloud-starter-netflix-eureka-server') {
+        exclude group: 'org.springframework.cloud', module: 'spring-cloud-starter-ribbon'
+        exclude group: 'com.netflix.ribbon', module: 'ribbon-eureka'
+    }
+    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'
+}

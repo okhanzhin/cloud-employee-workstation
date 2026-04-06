@@ -1,22 +1,35 @@
 package com.okhanzhin.employee.service;
 
+import com.okhanzhin.employee.service.client.WorkstationClient;
 import com.okhanzhin.employee.service.model.Employee;
+import com.okhanzhin.employee.service.model.EmployeeDetailsResponse;
+import com.okhanzhin.employee.service.model.Workstation;
 import com.okhanzhin.employee.service.service.EmployeeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
+
+    @Mock
+    private WorkstationClient workstationClient;
 
     private EmployeeService employeeService;
 
     @BeforeEach
     void setUp() {
-        employeeService = new EmployeeService();
+        employeeService = new EmployeeService(workstationClient);
     }
 
     @Test
@@ -83,6 +96,28 @@ class EmployeeServiceTest {
 
         assertThat(found).isNotNull();
         assertThat(found.getName()).isEqualTo("Сергей");
+    }
+
+    @Test
+    void getEmployeeDetailsById_existingEmployee_shouldReturnAggregatedResponse() {
+        Workstation workstation = new Workstation(1L, "Lenovo ThinkPad T14", "Windows 11");
+        when(workstationClient.getWorkstationByEmployeeId(1L)).thenReturn(workstation);
+
+        EmployeeDetailsResponse response = employeeService.getEmployeeDetailsById(1L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getEmployee()).isNotNull();
+        assertThat(response.getEmployee().getId()).isEqualTo(1L);
+        assertThat(response.getWorkstation()).isEqualTo(workstation);
+        verify(workstationClient).getWorkstationByEmployeeId(1L);
+    }
+
+    @Test
+    void getEmployeeDetailsById_nonExistingEmployee_shouldReturnNullAndNotCallWorkstationService() {
+        EmployeeDetailsResponse response = employeeService.getEmployeeDetailsById(999L);
+
+        assertThat(response).isNull();
+        verify(workstationClient, never()).getWorkstationByEmployeeId(999L);
     }
 }
 
