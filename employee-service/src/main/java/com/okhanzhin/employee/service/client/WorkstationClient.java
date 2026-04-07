@@ -11,4 +11,3 @@ public interface WorkstationClient {
 	@GetMapping("/employee/{employeeId}")
 	Workstation getWorkstationByEmployeeId(@PathVariable("employeeId") Long employeeId);
 }
-

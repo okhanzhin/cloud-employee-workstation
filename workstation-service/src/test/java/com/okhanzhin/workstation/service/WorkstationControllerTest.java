@@ -1,5 +1,6 @@
-package com.okhanzhin.workstation.service.controller;
+package com.okhanzhin.workstation.service;
 
+import com.okhanzhin.workstation.service.controller.WorkstationController;
 import com.okhanzhin.workstation.service.model.Workstation;
 import com.okhanzhin.workstation.service.service.WorkstationService;
 import org.junit.jupiter.api.Test;

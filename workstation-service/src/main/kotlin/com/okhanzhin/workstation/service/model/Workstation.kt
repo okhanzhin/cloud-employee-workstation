@@ -15,6 +15,6 @@ data class Workstation(
 	/**
      * Операционная система рабочей станции
      */
-	val os: String,
+	val os: String
 )
 

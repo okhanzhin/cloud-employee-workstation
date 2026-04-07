@@ -3,20 +3,17 @@ package com.okhanzhin.employee.service.service;
 import com.okhanzhin.employee.service.client.WorkstationClient;
 import com.okhanzhin.employee.service.model.Employee;
 import com.okhanzhin.employee.service.model.EmployeeDetailsResponse;
-import com.okhanzhin.employee.service.model.Workstation;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Сервис для управления сотрудниками
+ *
  * @author okhanzhin on 31.03.2026
  */
 @Service
@@ -63,13 +60,12 @@ public class EmployeeService {
      * Получить сотрудника вместе с рабочими пространствами
      */
     public EmployeeDetailsResponse getEmployeeDetailsById(Long employeeId) {
-        Employee employee = getEmployeeById(employeeId);
-        if (employee == null) {
-            return null;
-        }
-
-        Workstation workstation = workstationClient.getWorkstationByEmployeeId(employeeId);
-        return new EmployeeDetailsResponse(employee, workstation);
+        return Optional.ofNullable(getEmployeeById(employeeId))
+                .map(employee -> new EmployeeDetailsResponse(
+                        employee,
+                        workstationClient.getWorkstationByEmployeeId(employeeId)
+                ))
+                .orElse(null);
     }
 
     /**

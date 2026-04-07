@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  *
@@ -37,11 +38,11 @@ public class EmployeeController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
-        Employee employee = employeeService.getEmployeeById(id);
-        if (employee != null) {
-            return ResponseEntity.ok(employee);
-        }
-        return ResponseEntity.notFound().build();
+        var employee = employeeService.getEmployeeById(id);
+
+        return Optional.ofNullable(employee)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /**
@@ -49,11 +50,11 @@ public class EmployeeController {
      */
     @GetMapping("/{id}/details")
     public ResponseEntity<EmployeeDetailsResponse> getEmployeeDetails(@PathVariable Long id) {
-        EmployeeDetailsResponse details = employeeService.getEmployeeDetailsById(id);
-        if (details != null) {
-            return ResponseEntity.ok(details);
-        }
-        return ResponseEntity.notFound().build();
+        var details = employeeService.getEmployeeDetailsById(id);
+
+        return Optional.ofNullable(details)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /**
